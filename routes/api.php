@@ -27,16 +27,16 @@ Route::post('user-login', 'UserController@loginUser');
 
 
 
-// -------------------- [ Auth Tokens ]
+// -------------------- [ Auth Tokens ] ------------------
 
 
 Route::group(['middleware' => 'auth:api'], function () {
-    
+
     Route::get('user-detail', 'UserController@userDetail');
 
     Route::post('update-user', 'UserController@update');
 
-    Route::delete('delete-user', 'UserController@deleteUser');
+    Route::delete('delete-user/{userId}', 'UserController@deleteUser');
 
     Route::post('create-task', 'TaskController@createTask');
 
@@ -47,7 +47,6 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post('update-task', 'TaskController@updateTask');
 
     Route::delete('delete-task/{task_id}', 'TaskController@deleteTask');
-    
 
 });
 

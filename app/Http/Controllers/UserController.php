@@ -25,16 +25,16 @@ class UserController extends Controller
         );
 
         // if validation fails
-        if($validator->fails()) { 
-
+        if($validator->fails()) {
             return response()->json(["validation errors" => $validator->errors()]);
-
         }
 
         $input              =       array(
             'name'              =>        $request->name,
             'email'             =>        $request->email,
-            'password'          =>        bcrypt($request->password)
+            'password'          =>        bcrypt($request->password),
+            'type'              =>        "admin",
+            'role'              =>        "admin"
         );
 
         $user               =           User::create($input);
@@ -90,14 +90,12 @@ class UserController extends Controller
 
     // ---------------------------- [ Use Detail ] -------------------------------
     public function userDetail() {
-
         $user       =       Auth::user();
-
-        return response()->json(['success' => $user], $this->success_status);       
+        return response()->json(['success' => $user], $this->success_status);
 
     }
 
-    
+
 
     // -------------------------- [ Edit Using Passport Auth ]--------------------
     public function update(Request $request) {
@@ -112,7 +110,6 @@ class UserController extends Controller
         );
 
         // if validation fails
-
         if($validator->fails()) {
             return response()->json(["validation errors" => $validator->errors()]);
         }
@@ -129,14 +126,35 @@ class UserController extends Controller
 
     }
 
-    
-// ----------------------------- [ Delete User ] -----------------------------
-    public function deleteUser() {
 
+// ----------------------------- [ Delete User ] -----------------------------
+    public function deleteUser($id) {
         $user           =           Auth::user();
 
-        $user           =           User::findOrFail($user->id);
-        $user->delete();
-        return response()->json(['success' => true, 'message' => 'User deleted successfully']);
+        if(!is_null($user)) {
+
+            // check if user type is super admin
+            if(($user->is_admin == 1) && ($user->user_type == 1) && ($user->role == "admin")) {
+                $typeUser           =           User::findOrFail($id);
+
+                if(is_null($typeUser)) {
+                    return response()->json(["success" => false, "status" => "failed", "message" => "Whoops! user doesn't exist"]);
+                }
+
+                // if enter user is not admin
+                if($typeUser->is_admin == 0 && $typeUser->role == "user") {
+                    $typeUser->delete();
+                    return response()->json(['success' => true, "status" => "success", "message" => "User deleted successfully"]);
+                }
+
+                else {
+                    return response()->json(["success" => false, "status" => "warning", "message" => "Sorry! you are not allowed to delete other admin user"]);
+                }
+            }
+
+            else{
+                return response()->json(['error' => 'Unauthorised user'], 401);
+            }
+        }
     }
 }
